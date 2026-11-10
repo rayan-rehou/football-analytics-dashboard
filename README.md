@@ -2,6 +2,8 @@
 
 An interactive dashboard for exploring 380 matches from the 2024/25 Premier League season. Built by Rayan Rehou as an independent portfolio project.
 
+**[Open the live dashboard](https://rayan-rehou-football-analytics.streamlit.app/)**
+
 ![Dashboard preview showing team comparisons, head-to-head results, and scoring trends](https://github.com/user-attachments/assets/2d3ba741-905d-419f-b4bd-2fc74d9048b2)
 
 ## What you can explore
