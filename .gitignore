@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.pyc
+/football.db
+/football.db-*
+/Data/premier_league_2024_25.csv
