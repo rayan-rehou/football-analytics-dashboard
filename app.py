@@ -1,7 +1,11 @@
 import sqlite3
+from pathlib import Path
+from tempfile import mkdtemp
 
 import pandas as pd
 import streamlit as st
+
+from main import DATASET_URL, build_database
 
 st.set_page_config(page_title="Premier League Analytics | 2024/25")
 
@@ -58,7 +62,22 @@ WHERE team IN (?, ?)
 ORDER BY match_date;
 """
 
-connection = sqlite3.connect("football.db")
+@st.cache_resource
+def build_cloud_database():
+    database = Path(mkdtemp(prefix="football-analytics-")) / "football.db"
+    build_database(DATASET_URL, database)
+    return database
+
+
+database = Path(__file__).resolve().with_name("football.db")
+if not database.is_file():
+    try:
+        database = build_cloud_database()
+    except (OSError, ValueError):
+        st.error("The match dataset could not be loaded. Please try again later.")
+        st.stop()
+
+connection = sqlite3.connect(database)
 try:
     summary = pd.read_sql_query(
         "SELECT COUNT(*) AS matches FROM matches",
@@ -110,7 +129,7 @@ st.subheader("Head-to-head results")
 if first_team == second_team:
     st.write("Choose two different teams to compare.")
 else:
-    connection = sqlite3.connect("football.db")
+    connection = sqlite3.connect(database)
     try:
         head_to_head = pd.read_sql_query(
             head_to_head_query,
