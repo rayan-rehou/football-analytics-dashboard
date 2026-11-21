@@ -1,4 +1,4 @@
-# Premier League Analytics
+# Premier League Analytics Dashboard
 
 An interactive dashboard for exploring 380 matches from the 2024/25 Premier League season. Built by Rayan Rehou as an independent portfolio project.
 
