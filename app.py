@@ -1,13 +1,19 @@
 import sqlite3
-from pathlib import Path
-from tempfile import mkdtemp
 
 import pandas as pd
 import streamlit as st
 
-from main import DATASET_URL, build_database
+from main import SEASON, load_matches                                                   # NEW: reuse the season name and the loading function from main.py
 
-st.set_page_config(page_title="Premier League Analytics | 2024/25")
+st.set_page_config(page_title=f"Premier League Analytics | {SEASON}")                   # Sets the text shown on the browser tab
+
+
+@st.cache_data(ttl=6 * 60 * 60)                                                         # NEW: timer — after a download, skip this function for 6 hours
+def refresh_data():                                                                     # NEW: downloads the latest CSV and rebuilds football.db
+    load_matches()
+
+
+refresh_data()                                                                          # NEW: runs on each visit, but only really downloads every 6 hours
 
 ranking_query = """
 WITH team_games AS (
@@ -62,22 +68,7 @@ WHERE team IN (?, ?)
 ORDER BY match_date;
 """
 
-@st.cache_resource
-def build_cloud_database():
-    database = Path(mkdtemp(prefix="football-analytics-")) / "football.db"
-    build_database(DATASET_URL, database)
-    return database
-
-
-database = Path(__file__).resolve().with_name("football.db")
-if not database.is_file():
-    try:
-        database = build_cloud_database()
-    except (OSError, ValueError):
-        st.error("The match dataset could not be loaded. Please try again later.")
-        st.stop()
-
-connection = sqlite3.connect(database)
+connection = sqlite3.connect("football.db")
 try:
     summary = pd.read_sql_query(
         "SELECT COUNT(*) AS matches FROM matches",
@@ -93,12 +84,12 @@ ranking = ranking.rename(columns={
 })
 
 st.title("Premier League Analytics")
-st.caption("2024/25 season")
+st.caption(f"{SEASON} season")                                                          # season comes from main.py instead of being typed here
 st.write(
     "Compare clubs’ scoring at home and away, explore head-to-head results, "
     "and track scoring form across the season."
 )
-st.metric("Matches in the dataset", int(summary["matches"].iloc[0]))
+st.metric("Matches played so far", int(summary["matches"].iloc[0]))                     #label: the number grows during the season
 
 st.subheader("Top 3 teams by goals per match")
 top_three = ranking[["Team", "Goals per match"]].head(3)
@@ -129,7 +120,7 @@ st.subheader("Head-to-head results")
 if first_team == second_team:
     st.write("Choose two different teams to compare.")
 else:
-    connection = sqlite3.connect(database)
+    connection = sqlite3.connect("football.db")
     try:
         head_to_head = pd.read_sql_query(
             head_to_head_query,
@@ -145,7 +136,10 @@ else:
     finally:
         connection.close()
 
-    st.dataframe(head_to_head, hide_index=True)
+    if head_to_head.empty:                                                              # mid-season, the two teams may not have played each other yet
+        st.write("These two teams haven't played each other yet this season.")
+    else:
+        st.dataframe(head_to_head, hide_index=True)
 
     st.subheader("Scoring form over the season")
     st.write("Average goals over each team's last five matches.")
