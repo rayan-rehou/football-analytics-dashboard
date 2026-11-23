@@ -1,36 +1,36 @@
-# Premier League Analytics Dashboard
+# Live Premier League Analytics Dashboard
 
-An interactive dashboard for exploring 380 matches from the 2024/25 Premier League season. Built by Rayan Rehou as an independent portfolio project.
+A live dashboard for the current 2026/27 Premier League season. It downloads the latest results every 6 hours, so the stats keep up as the season goes on. Built by Rayan Rehou as an independent portfolio project.
 
-**[Open the live dashboard](https://rayan-rehou-football-analytics.streamlit.app/)**
+**[Open the live dashboard](https://rayan-rehou-football-analytics.streamlit.app/)** · **[Watch the demo](https://rayan-rehou.github.io/#football)**
 
-![Dashboard preview showing team comparisons, head-to-head results, and scoring trends](https://github.com/user-attachments/assets/2d3ba741-905d-419f-b4bd-2fc74d9048b2)
+![Dashboard showing the 2026/27 season, matches played so far, and the top 3 teams by goals per match](https://rayan-rehou.github.io/premier-league-live-poster.webp)
 
 ## What you can explore
 
+- See how many matches have been played so far this season.
 - See the three clubs with the highest goals per match.
 - Compare any two clubs' overall, home, and away scoring averages.
-- View their head-to-head scores and match dates.
-- Follow each club's scoring form with a rolling average over its latest five matches. The opening four matches use the results available at that point.
+- View their head-to-head scores and match dates, or a message if they haven't played each other yet.
+- Follow each club's scoring form with a rolling average over its latest five matches.
 
 ## How it works
 
-`main.py` uses Pandas to read the CSV, standardize the dates, and build the SQLite database. `app.py` queries the database and displays the results in Streamlit. SQL calculates the rankings, venue averages, and rolling scoring averages.
+- `main.py` downloads the current season's CSV straight from Football-Data.co.uk, cleans it with Pandas (removes empty rows, makes goals whole numbers, changes dates to YYYY-MM-DD) and saves it to a SQLite database.
+- `app.py` runs that download on each visit, but a 6-hour cache (`st.cache_data(ttl=6 * 60 * 60)`) means the data is only really downloaded every 6 hours.
+- SQL calculates the rankings, the home and away averages, and the rolling scoring averages, and Streamlit displays the results.
 
 ## Run locally
-
-Download the [2024/25 Premier League CSV](https://www.football-data.co.uk/mmz4281/2425/E0.csv) from Football-Data.co.uk. Create a folder named `Data` in the project folder and save the CSV as `Data/premier_league_2024_25.csv`.
 
 From the project folder on Windows, run these commands in PowerShell.
 
 ```powershell
 py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe main.py
 .\.venv\Scripts\python.exe -m streamlit run app.py
 ```
 
-Open the local URL printed in the terminal. Run `main.py` again whenever you need to rebuild `football.db`.
+Open the local URL printed in the terminal. The app downloads the latest data by itself. To rebuild `football.db` without opening the app, run `main.py`.
 
 ## Data source
 
